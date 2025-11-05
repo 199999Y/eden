@@ -1,0 +1,33 @@
+name: Security Scan
+on: [push, pull_request]
+
+jobs:
+  security-analysis:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Run CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        languages: ${{ matrix.language }}
+        
+    - name: Semgrep SAST
+      uses: returntocorp/semgrep-action@v1
+      
+    - name: Dependency Check
+      uses: dependency-review-action@v3
+      
+    - name: Run TruffleHog (secrets detection)
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        
+    - name: Generate Security Report
+      run: |
+        echo "# Security Scan Report" > security-report.md
+        echo "## Vulnerabilities Found" >> security-report.md
+        echo "- CodeQL results available in Security tab" >> security-report.md
+        echo "- Dependency vulnerabilities checked" >> security-report.md
